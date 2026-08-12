@@ -4,13 +4,16 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Landing from "@/components/Landing";
 import Editor from "@/components/Editor";
+import Background3D from "@/components/Background3D";
 
 export default function Home() {
   const [step, setStep] = useState<"landing" | "editor">("landing");
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden flex flex-col items-center bg-hh-green">
+    <main className="relative min-h-screen overflow-x-hidden flex flex-col items-center bg-transparent">
       
+      <Background3D />
+
       {/* Global Header */}
       <header className="w-full py-8 flex justify-center items-center z-50">
         <div className="relative flex items-center justify-center select-none">

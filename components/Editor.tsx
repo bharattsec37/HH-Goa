@@ -1,26 +1,32 @@
 "use client";
 
 import { useIdentityStore } from "@/lib/store";
-import { ArrowLeft, Download, Share2 } from "lucide-react";
+import { ArrowLeft, Download, Share2, Camera } from "lucide-react";
 import BuilderFormFields from "./forms/BuilderFormFields";
 import CrewFormFields from "./forms/CrewFormFields";
 import { Stage, Layer, Image as KonvaImage, Text, Group, Rect } from "react-konva";
 import useImage from "use-image";
 import { useRef, useState } from "react";
+import WebcamModal from "./WebcamModal";
 
 export default function Editor({ onBack }: { onBack: () => void }) {
   const store = useIdentityStore();
   const stageRef = useRef<any>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showWebcam, setShowWebcam] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // We map the frameId to the UI text
   const isCrew = store.frameId === "frame3";
-  const frameTitle = isCrew ? "OFFICIAL CREW FRAME" : "OFFICIAL EVENT PASS";
+  const isGoa = store.frameId === "frame2";
+  const frameTitle = isGoa ? "GOA VIBES FRAME" : isCrew ? "OFFICIAL CREW FRAME" : "OFFICIAL EVENT PASS";
 
   // Dummy logic for loading the frame image
   const [frameImg] = useImage(
     store.frameId === "frame1" ? "/ID frame.png" :
-    store.frameId === "frame3" ? "/Crew frame.png" : "/frames/goa.jpg"
+    store.frameId === "frame3" ? "/Crew frame.png" : "/Photo Frame Transparent.png"
   );
   
   // Dummy logic for user image
@@ -44,7 +50,31 @@ export default function Editor({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const scale = 0.5; // Scale down for preview
+  const shareText = `I'm heading to Hacker House Goa 2026! 🌴 Check out my ${isCrew ? 'Crew' : isGoa ? 'Vibe' : 'Builder'} pass! #FrameInGoa`;
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : "https://hhgoa-omega.vercel.app/"; 
+
+  const handleShareX = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, "_blank");
+  };
+
+  const handleShareLinkedIn = () => {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, "_blank");
+  };
+
+  const handleShareInstagram = () => {
+    handleDownload();
+    setTimeout(() => {
+      alert("Image saved! You can now open Instagram and post it to your Story or Feed.");
+      window.open("https://instagram.com", "_blank");
+    }, 1000);
+  };
+
+  const handleFile = (file: File) => {
+    const url = URL.createObjectURL(file);
+    store.setPhotoUrl(url);
+  };
+
+  const scale = isGoa ? 0.45 : 0.5; // Scale down for preview
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -55,28 +85,30 @@ export default function Editor({ onBack }: { onBack: () => void }) {
       <div className="w-full flex flex-col lg:flex-row gap-8 items-stretch">
         
         {/* Left Column: Form Fields */}
-        <div className="flex-1 w-full max-w-md mx-auto lg:max-w-none lg:w-1/3 bg-[#F4F1E1] rounded-3xl p-6 shadow-2xl border border-[#E5E0C8] flex flex-col">
-          <div className="mb-6 flex justify-between items-start border-b border-[#E5E0C8] pb-4">
-            <div>
-              <span className="text-xs text-[#8C281F] font-bold tracking-widest uppercase block mb-1">
-                {isCrew ? "MASTER CREW FRAME • 2026" : "TRAVEL PASS • 2026"}
-              </span>
-              <h2 className="text-3xl font-yatra text-[#032A1C] uppercase">
-                {isCrew ? "SQUAD DETAILS" : "YOUR BUILDER DETAILS"}
-              </h2>
+        {!isGoa && (
+          <div className="flex-1 w-full max-w-md mx-auto lg:max-w-none lg:w-1/3 bg-[#F4F1E1] rounded-3xl p-6 shadow-2xl border border-[#E5E0C8] flex flex-col">
+            <div className="mb-6 flex justify-between items-start border-b border-[#E5E0C8] pb-4">
+              <div>
+                <span className="text-xs text-[#8C281F] font-bold tracking-widest uppercase block mb-1">
+                  {isCrew ? "MASTER CREW FRAME • 2026" : "TRAVEL PASS • 2026"}
+                </span>
+                <h2 className="text-3xl font-yatra text-[#032A1C] uppercase">
+                  {isCrew ? "SQUAD DETAILS" : "YOUR BUILDER DETAILS"}
+                </h2>
+              </div>
+              <div className="bg-white border border-[#E5E0C8] px-3 py-1 rounded-full text-xs font-space-mono text-[#032A1C]">
+                {isCrew ? "Max 3 Members" : "New Builder ID"}
+              </div>
             </div>
-            <div className="bg-white border border-[#E5E0C8] px-3 py-1 rounded-full text-xs font-space-mono text-[#032A1C]">
-              {isCrew ? "Max 3 Members" : "New Builder ID"}
-            </div>
-          </div>
 
-          <div className="flex-grow overflow-y-auto no-scrollbar pr-2">
-            {isCrew ? <CrewFormFields /> : <BuilderFormFields />}
+            <div className="flex-grow overflow-y-auto no-scrollbar pr-2">
+              {isCrew ? <CrewFormFields /> : <BuilderFormFields />}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right Column: Preview & Export */}
-        <div className="flex-[2] w-full bg-[#F4F1E1] rounded-3xl p-6 shadow-2xl border border-[#E5E0C8] flex flex-col items-center justify-between">
+        <div className={`${isGoa ? 'w-full max-w-2xl mx-auto' : 'flex-[2] w-full'} bg-[#F4F1E1] rounded-3xl p-6 shadow-2xl border border-[#E5E0C8] flex flex-col items-center justify-between`}>
           <div className="w-full mb-6 flex justify-between items-start border-b border-[#E5E0C8] pb-4">
             <div>
               <span className="text-xs text-[#8C281F] font-bold tracking-widest uppercase block mb-1">
@@ -86,7 +118,7 @@ export default function Editor({ onBack }: { onBack: () => void }) {
               <p className="text-xs text-[#032A1C]/60 font-space-mono">Master template composite</p>
             </div>
             <div className="bg-white border border-[#E5E0C8] px-3 py-1 rounded-full text-xs font-space-mono text-[#032A1C]">
-              {isCrew ? "1024 × 1024" : "1055 × 1491"}
+              {isCrew ? "1400 × 1100" : isGoa ? "1080 × 1080" : "1055 × 1491"}
             </div>
           </div>
 
@@ -94,30 +126,39 @@ export default function Editor({ onBack }: { onBack: () => void }) {
           <div className="relative rounded-2xl overflow-hidden bg-[#032A1C] shadow-inner mb-6 flex items-center justify-center p-4 w-full min-h-[500px]">
              <div className="bg-black/20 rounded-xl overflow-hidden shadow-2xl">
                <Stage 
-                  width={(isCrew ? 1400 : 1055) * scale} 
-                  height={(isCrew ? 1100 : 1491) * scale} 
+                  width={(isCrew ? 1400 : isGoa ? 1080 : 1055) * scale} 
+                  height={(isCrew ? 1100 : isGoa ? 1080 : 1491) * scale} 
                   scaleX={scale} scaleY={scale} 
                   ref={stageRef}
                 >
                   <Layer>
+                    {/* Goa Frame background photo */}
+                    {isGoa && userImg && (
+                      <KonvaImage 
+                        image={userImg} 
+                        x={165} y={165} 
+                        width={750} height={750} 
+                      />
+                    )}
+
                     {/* Background Template */}
-                    {frameImg && <KonvaImage image={frameImg} width={isCrew ? 1400 : 1055} height={isCrew ? 1100 : 1491} />}
+                    {frameImg && <KonvaImage image={frameImg} width={isCrew ? 1400 : isGoa ? 1080 : 1055} height={isCrew ? 1100 : isGoa ? 1080 : 1491} />}
                     
                     {/* Builder Pass specific rendering */}
-                    {!isCrew && (
+                    {!isCrew && !isGoa && (
                       <>
                         {/* User Photo */}
                         {userImg && (
                           <Group
                             clipFunc={(ctx) => {
                               // Tighter circle to prevent bleeding over the gold ring and sticker
-                              ctx.arc(527, 540, 305, 0, Math.PI * 2, false);
+                              ctx.arc(527, 500, 280, 0, Math.PI * 2, false);
                             }}
                           >
                             <KonvaImage 
                               image={userImg} 
-                              x={222} y={235} 
-                              width={610} height={610} 
+                              x={247} y={220} 
+                              width={560} height={560} 
                             />
                           </Group>
                         )}
@@ -126,7 +167,7 @@ export default function Editor({ onBack }: { onBack: () => void }) {
                         {store.name && (
                           <Text 
                             text={store.name.toUpperCase()} 
-                            x={0} y={880} width={1055} align="center"
+                            x={0} y={850} width={1055} align="center"
                             fontSize={100} fontFamily="Bebas Neue" fill="#032A1C" fontStyle="bold"
                           />
                         )}
@@ -180,12 +221,12 @@ export default function Editor({ onBack }: { onBack: () => void }) {
                         {crewImg1 && (
                           <Group
                             clipFunc={(ctx) => {
-                              ctx.arc(450, 490, 180, 0, Math.PI * 2, false);
+                              ctx.arc(430, 490, 180, 0, Math.PI * 2, false);
                             }}
                           >
                             <KonvaImage 
                               image={crewImg1} 
-                              x={270} y={310} 
+                              x={250} y={310} 
                               width={360} height={360} 
                             />
                           </Group>
@@ -227,12 +268,12 @@ export default function Editor({ onBack }: { onBack: () => void }) {
                         {crewImg2 && (
                           <Group
                             clipFunc={(ctx) => {
-                              ctx.arc(950, 490, 180, 0, Math.PI * 2, false);
+                              ctx.arc(970, 490, 180, 0, Math.PI * 2, false);
                             }}
                           >
                             <KonvaImage 
                               image={crewImg2} 
-                              x={770} y={310} 
+                              x={790} y={310} 
                               width={360} height={360} 
                             />
                           </Group>
@@ -284,6 +325,38 @@ export default function Editor({ onBack }: { onBack: () => void }) {
              </div>
           </div>
 
+          {isGoa && (
+            <div className="w-full flex gap-4 mb-6">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={(e) => { if(e.target.files?.[0]) handleFile(e.target.files[0]); }}
+              />
+              <input 
+                type="file" 
+                ref={cameraInputRef} 
+                className="hidden" 
+                accept="image/*"
+                capture="user"
+                onChange={(e) => { if(e.target.files?.[0]) handleFile(e.target.files[0]); }}
+              />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 px-4 py-3 bg-white border border-[#E5E0C8] rounded-xl text-sm font-space-mono text-[#032A1C] font-bold hover:bg-gray-50 flex justify-center items-center shadow-sm"
+              >
+                Choose File
+              </button>
+              <button 
+                onClick={() => setShowWebcam(true)}
+                className="flex-1 px-4 py-3 bg-[#094F35] text-white rounded-xl text-sm font-space-mono font-bold hover:bg-[#032A1C] shadow-md border-b-4 border-[#032A1C] flex justify-center items-center"
+              >
+                <Camera className="w-4 h-4 mr-2" /> Take Selfie
+              </button>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-between">
             <button 
@@ -291,18 +364,55 @@ export default function Editor({ onBack }: { onBack: () => void }) {
               disabled={isExporting}
               className="flex-1 py-4 rounded-xl bg-white/80 border border-[#E5E0C8] text-[#032A1C] hover:bg-white transition-all font-bold text-sm uppercase tracking-wider font-space-mono flex items-center justify-center shadow-sm"
             >
-              <Download className="w-4 h-4 mr-2" /> {isExporting ? "Saving..." : `DOWNLOAD ${isCrew ? 'CREW' : 'BUILDER'} ID`}
+              <Download className="w-4 h-4 mr-2" /> {isExporting ? "Saving..." : `DOWNLOAD ${isCrew ? 'CREW' : isGoa ? 'FRAME' : 'BUILDER'} ID`}
             </button>
             
-            <button 
-              className="flex-1 py-4 rounded-xl bg-white/80 border border-[#E5E0C8] text-[#032A1C] hover:bg-white transition-all font-bold text-sm uppercase tracking-wider font-space-mono flex items-center justify-center shadow-sm"
-            >
-              <Share2 className="w-4 h-4 mr-2" /> SHARE {isCrew ? 'CREW' : 'BUILDER'} ID
-            </button>
+            {!showShare ? (
+              <button 
+                onClick={() => setShowShare(true)}
+                className="flex-1 py-4 rounded-xl bg-white/80 border border-[#E5E0C8] text-[#032A1C] hover:bg-white transition-all font-bold text-sm uppercase tracking-wider font-space-mono flex items-center justify-center shadow-sm"
+              >
+                <Share2 className="w-4 h-4 mr-2" /> SHARE {isCrew ? 'CREW' : isGoa ? 'FRAME' : 'BUILDER'} ID
+              </button>
+            ) : (
+              <div className="flex-1 flex gap-2">
+                <button 
+                  onClick={handleShareX}
+                  className="flex-1 py-4 rounded-xl bg-black text-white hover:bg-gray-800 transition-all flex items-center justify-center shadow-sm"
+                  title="Share on X"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </button>
+                <button 
+                  onClick={handleShareLinkedIn}
+                  className="flex-1 py-4 rounded-xl bg-[#0A66C2] text-white hover:bg-[#004182] transition-all flex items-center justify-center shadow-sm"
+                  title="Share on LinkedIn"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </button>
+                <button 
+                  onClick={handleShareInstagram}
+                  className="flex-1 py-4 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-90 transition-all flex items-center justify-center shadow-sm"
+                  title="Share on Instagram"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
       </div>
+
+      {showWebcam && (
+        <WebcamModal 
+          onCapture={(dataUrl) => {
+            store.setPhotoUrl(dataUrl);
+            setShowWebcam(false);
+          }} 
+          onClose={() => setShowWebcam(false)} 
+        />
+      )}
     </div>
   );
 }
