@@ -21,10 +21,15 @@ export default function Landing({ onStart }: { onStart: () => void }) {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="flex flex-col items-center text-center space-y-6 max-w-3xl pt-10 pb-20"
       >
-        <div className="inline-flex items-center space-x-2 bg-hh-yellow/10 border border-hh-yellow/30 px-4 py-1.5 rounded-full text-sm font-medium text-hh-yellow font-space-mono">
+        <a 
+          href="https://hhgoa.com/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center space-x-2 bg-hh-yellow/10 border border-hh-yellow/30 px-4 py-1.5 rounded-full text-sm font-medium text-hh-yellow font-space-mono hover:bg-hh-yellow/20 transition-colors cursor-pointer"
+        >
           <Sparkles className="w-4 h-4" />
           <span>Hacker House Goa 2026</span>
-        </div>
+        </a>
 
         <h1 className="text-6xl md:text-8xl font-bebas tracking-wide leading-[0.9]">
           Frame Your <span className="text-hh-pink">Journey</span>
