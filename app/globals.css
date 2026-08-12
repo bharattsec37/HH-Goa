@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-hh-green: #006B3C;
+  --color-hh-cream: #FFF9E8;
+  --color-hh-pink: #FF007A;
+  --color-hh-yellow: #FFD700;
+  
+  --font-bebas: var(--font-bebas), ui-sans-serif, system-ui;
+  --font-jakarta: var(--font-jakarta), ui-sans-serif, system-ui;
+  --font-space-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-yatra: var(--font-yatra), serif;
+}
+
+body {
+  background-color: var(--color-hh-green);
+  color: var(--color-hh-cream);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.glass-panel {
+  background: rgba(255, 249, 232, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 249, 232, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 249, 232, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 249, 232, 0.2);
+  color: var(--color-hh-cream);
+  transition: all 0.3s ease;
+}
+
+.glass-input::placeholder {
+  color: rgba(255, 249, 232, 0.5);
+}
+
+.glass-input:focus {
+  background: rgba(255, 249, 232, 0.15);
+  border-color: var(--color-hh-pink);
+  outline: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
